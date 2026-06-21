@@ -1,0 +1,6 @@
+name: ServerPalPlugin
+version: 1.0.0
+main: com.serverpal.ServerPalPlugin
+api-version: "1.21"
+description: ServerPal connector – sends server metrics to the dashboard
+author: ServerPal
