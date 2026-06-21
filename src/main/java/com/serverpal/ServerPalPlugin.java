@@ -4,23 +4,51 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.io.File;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 public class ServerPalPlugin extends JavaPlugin {
 
     private String backendUrl = "https://serverpal-backend.onrender.com/api/push";
-    private String serverId = null;
-    private String key = null;
+    private String serverId = "my-server-1";
+    private String key = "test-key";
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
-        backendUrl = getConfig().getString("backend-url", backendUrl);
-        serverId = getConfig().getString("server-id", "test-server");
-        key = getConfig().getString("key", "test-key");
+        // Create default config if it doesn't exist
+        File configFile = new File(getDataFolder(), "config.yml");
+        if (!configFile.exists()) {
+            getDataFolder().mkdirs();
+            try {
+                String defaultConfig = 
+                    "backend-url: \"" + backendUrl + "\"\n" +
+                    "server-id: \"" + serverId + "\"\n" +
+                    "key: \"" + key + "\"\n";
+                Files.write(configFile.toPath(), defaultConfig.getBytes(StandardCharsets.UTF_8));
+            } catch (Exception e) {
+                getLogger().warning("Could not create default config.yml");
+            }
+        }
+
+        // Load values from file
+        try {
+            for (String line : Files.readAllLines(configFile.toPath())) {
+                line = line.trim();
+                if (line.startsWith("backend-url:")) {
+                    backendUrl = line.substring("backend-url:".length()).trim().replaceAll("\"", "");
+                } else if (line.startsWith("server-id:")) {
+                    serverId = line.substring("server-id:".length()).trim().replaceAll("\"", "");
+                } else if (line.startsWith("key:")) {
+                    key = line.substring("key:".length()).trim().replaceAll("\"", "");
+                }
+            }
+        } catch (Exception e) {
+            getLogger().warning("Could not read config.yml, using defaults");
+        }
 
         getLogger().info("ServerPal connector enabled. Pushing to " + backendUrl);
 
